@@ -1,11 +1,8 @@
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.Math;
 
 import processing.core.PApplet;
 import de.fhpotsdam.unfolding.UnfoldingMap;
@@ -19,11 +16,15 @@ import de.fhpotsdam.unfolding.utils.ScreenPosition;
  * 
  * Download the distribution with examples for many more examples and features.
  */
-public class BejjingBus extends PApplet {
+public class BeijingBus extends PApplet {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	UnfoldingMap map;
 	final String DATA_DIRECTORY = "data"; 
-	Location bejingLocation = new Location(39.9f, 116.3f);
+	Location beijingLocation = new Location(39.9f, 116.3f);
 	List<Bus> buses = new ArrayList<Bus>();
 	List<Location> pathLocs = null;
 	HScrollbar hs = null; // the scrollbar
@@ -33,7 +34,7 @@ public class BejjingBus extends PApplet {
 	
 	int displayFrameCnt = 80;
 	
-	void loadData(List list, String filename) {
+	void loadData(List<Location> list, String filename) {
 		BufferedReader reader = createReader(filename);
 
 		for (int i = 0; i < 1600; i += 5) {
@@ -62,14 +63,7 @@ public class BejjingBus extends PApplet {
 		try {
 
 			File file = new File(filePath);
-			if (!file.isDirectory()) {
-				System.out.println("文件");
-				System.out.println("path=" + file.getPath());
-				System.out.println("absolutepath=" + file.getAbsolutePath());
-				System.out.println("name=" + file.getName());
-
-			} else if (file.isDirectory()) {
-				System.out.println("文件夹");
+			if (file.isDirectory()) {
 				String[] filelist = file.list();
 				for (int i = 0; i < filelist.length; i++) {
 					File readfile = new File(filePath + "\\" + filelist[i]);
@@ -84,7 +78,7 @@ public class BejjingBus extends PApplet {
 						buses.add(new Bus(readfile.getName().substring(0, readfile.getName().indexOf('.')), pathLocs, buses));
 						
 
-					} else if (readfile.isDirectory()) {
+					} else {
 						// readfile(filePath + "\\" + filelist[i]);
 					}
 				}
@@ -102,9 +96,9 @@ public class BejjingBus extends PApplet {
 		map = new UnfoldingMap(this, new MBTilesMapProvider(mbTilesString));
 
 		map.zoomToLevel(initZoomLevel);
-		map.panTo(bejingLocation);
+		map.panTo(beijingLocation);
 		map.setZoomRange(9, 14); // prevent zooming too far out
-		map.setPanningRestriction(bejingLocation, 50);
+		map.setPanningRestriction(beijingLocation, 50);
 		MapUtils.createDefaultEventDispatcher(this, map);
 
 		initBuses(buses, DATA_DIRECTORY);
