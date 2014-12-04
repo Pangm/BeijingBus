@@ -12,9 +12,9 @@ import de.fhpotsdam.unfolding.utils.MapUtils;
 import de.fhpotsdam.unfolding.utils.ScreenPosition;
 
 /**
- * Hello Unfolding World.
- * 
- * Download the distribution with examples for many more examples and features.
+ * Beijing Bus.
+ * Visualization of Bus position.
+ * .
  */
 public class BeijingBus extends PApplet {
 
@@ -26,11 +26,15 @@ public class BeijingBus extends PApplet {
 	final String DATA_DIRECTORY = "data"; 
 	Location beijingLocation = new Location(39.9f, 116.3f);
 	List<Bus> buses = new ArrayList<Bus>();
+	List<String> lineNums = new ArrayList<String>();
 	List<Location> pathLocs = null;
 	HScrollbar hs = null; // the scrollbar
 	Scrollbar s = null; // the scrollbar
 	Button button = null;
+	ControlPanel panel = null;
 	int initZoomLevel = 11;
+	
+	List<Control> controls = new ArrayList<Control>();
 	
 	int displayFrameCnt = 80;
 	
@@ -55,29 +59,30 @@ public class BeijingBus extends PApplet {
 				e.printStackTrace();
 				line = null;
 			}
-
 		}
 	}
 
 	private void initBuses(List<Bus> buses, String filePath) {
 		try {
-
 			File file = new File(filePath);
 			if (file.isDirectory()) {
 				String[] filelist = file.list();
 				for (int i = 0; i < filelist.length; i++) {
 					File readfile = new File(filePath + "\\" + filelist[i]);
 					if (!readfile.isDirectory()) {
+						String name = readfile.getName();
 						System.out.println("path=" + readfile.getPath());
 						System.out.println("absolutepath="
 								+ readfile.getAbsolutePath());
-						System.out.println("name=" + readfile.getName());
+						System.out.println("name=" + name);
 						
 						pathLocs = new ArrayList<Location>();
 						loadData(pathLocs, readfile.getPath());
-						buses.add(new Bus(readfile.getName().substring(0, readfile.getName().indexOf('.')), pathLocs, buses));
-						
-
+						buses.add(new Bus(name.substring(0, name.indexOf('.')), pathLocs, buses));
+						String lineNum = name.substring(name.indexOf('-'), name.indexOf('.'));
+						if (!lineNums.contains(lineNum)) {
+							lineNums.add(lineNum);
+						}
 					} else {
 						// readfile(filePath + "\\" + filelist[i]);
 					}
@@ -89,7 +94,7 @@ public class BeijingBus extends PApplet {
 	}
 
 	public void setup() {
-		size(1000, 600, OPENGL);
+		size(1000, 600, P2D);
 
 		String mbTilesString = sketchPath("bj_ed2114.mbtiles");
 
@@ -103,26 +108,58 @@ public class BeijingBus extends PApplet {
 
 		initBuses(buses, DATA_DIRECTORY);
 
-//		hs = new HScrollbar(width / 4, 7 * height / 8, width / 2, 16, 16, buses);
-		hs = new HScrollbar(4 * width / 5, 3 * height / 8, 20, height / 4, 20, buses);
-		s = new Scrollbar(width / 4, 7 * height / 8 + 40, width / 2, 20, 20, buses);
+//		hs = new HScrollbar(4 * width / 5, 3 * height / 8, 20, height / 4, 20, buses);
+//		s = new Scrollbar(width / 4, 7 * height / 8 + 40, width / 2, 20, 20, buses);
+		s = new Scrollbar(width / 2, 7 * height / 8, width / 3, 20, 20, buses);
 		
-		button = new Button(4 * width / 5, 3 * height / 4, 20, 20, buses);
+		button = new Button(6 * width / 7, 7 * height / 8 - 10, 20, 20, buses);
+		panel = new ControlPanel(1* width / 20, 4 * height / 5, 9* width / 10, 3 * height / 20, buses);
+		
+//		controls.add(hs);
+		controls.add(panel);
+		controls.add(s);
+		controls.add(button);
+		
+		
+		Circle grayCircle = new Circle(1* width / 20 + 60, 4 * height / 5 + 40, 30, 30, 1);
+		Circle yellowCircle = new Circle(1* width / 20 + 100, 4 * height /5+ 40, 30, 30, 0);
+		controls.add(grayCircle);
+		controls.add(yellowCircle);
+		
+		int half = (lineNums.size() + 1)/2;
+		
+		for (int i = 0; i < half; i++) {
+			CircleButton cButton = new CircleButton(1* width / 20 + 150 + i*35, 4 * height / 5 + 20, 
+					25, 25, buses, lineNums.get(i));
+			controls.add(cButton);
+		}
+		
+		for (int i = half; i < lineNums.size(); i++) {
+			CircleButton cButton = new CircleButton(1* width / 20 + 150 + (i-half)*35, 19 * height / 20 - 30, 
+					25, 25, buses, lineNums.get(i));
+			controls.add(cButton);
+		}
 		
 		frameRate(60);
-		noStroke();
+//		noStroke();
 	}
 
 	public void draw() {
 		background(0);
 		map.draw();
 
-		hs.update();
-		s.update();
-		hs.display();
-		s.display();
-		button.update();
-		button.display();
+//		hs.update();
+//		s.update();
+//		hs.display();
+//		s.display();
+//		button.update();
+//		button.display();
+//		panel.display();
+		
+		for (Control control : controls) {
+			control.update();
+			control.display();
+		}
 		
 		for (Bus bus : buses) {
 			bus.display();
@@ -133,18 +170,18 @@ public class BeijingBus extends PApplet {
 				bus.clearPreviosPos();
 			}
 			
-			s.setIsDisplay(true);
-			hs.setIsDisplay(true);
-			button.setIsDisplay(true);
+			for (Control control : controls) {
+				control.setIsDisplay(true);
+			}
 			displayFrameCnt = 100;
 		} 
 		
 		if (displayFrameCnt > 0){
 			displayFrameCnt--;
 		} else {
-			s.setIsDisplay(false);
-			hs.setIsDisplay(false);
-			button.setIsDisplay(false);
+			for (Control control : controls) {
+				control.setIsDisplay(false);
+			}
 		}
 	}
 	
@@ -158,6 +195,7 @@ public class BeijingBus extends PApplet {
 		boolean isCollision = false;
 		float progress = 0f;
 		boolean isDisplayName = false;
+		boolean isDisplay = true;
 
 		float pct = 0;
 		float initStep = 0.5f;
@@ -204,46 +242,50 @@ public class BeijingBus extends PApplet {
 				y = endPos.y;
 				update();
 			}
-			
 			addPosition(new ScreenPosition(x, y));
 			
-			int size = previousPoss.size();		
-			ScreenPosition pos = previousPoss.get(size - 1);
-//			fill(255,196,13);
-			noStroke();
-			fill(255, 255, 255,0.2f * 255);
-			ellipse(pos.x, pos.y, 10,10);
-			
-			fill(255, 255, 255);
-			ellipse(pos.x, pos.y,4,4);
-//			fill(255,196,13,0.5f * 255);
-			
-			for (int i = size - 1; i > -1; i--) {
-//				fill(45,137,239, pow(4, (1 + i - size) * 0.1f) * 255);
-//				fill(255,196,13, pow(2, (1 + i - size) * 0.1f) * 150);
-				fill(255, 255, 255, pow(2, (1 + i - size) * 0.1f) * 150);
-				pos = previousPoss.get(i);
-//				ellipse(pos.x, pos.y, pow(4, (1 + i - size) * 0.02f) * 8,
-//						pow(4, (1 + i - size) * 0.02f) * 8);
-
-				ellipse(pos.x, pos.y,2,2);
-//				ellipse(pos.x, pos.y, pow(4, (1 + i - size) * 0.02f) * 4,
-//						pow(4, (1 + i - size) * 0.02f) * 4);
+			if (isDisplay) {
+				int size = previousPoss.size();	
 				
-						
+				ScreenPosition pos = previousPoss.get(size - 1);
+//						fill(255,196,13);
+				noStroke();
+				fill(255, 255, 255,0.2f * 255);
+				ellipse(pos.x, pos.y, 10,10);
+				
+				fill(255, 255, 255);
+				ellipse(pos.x, pos.y,4,4);
+//						fill(255,196,13,0.5f * 255);
+				
+				for (int i = size - 1; i > -1; i--) {
+//							fill(45,137,239, pow(4, (1 + i - size) * 0.1f) * 255);
+//							fill(255,196,13, pow(2, (1 + i - size) * 0.1f) * 150);
+					fill(255, 255, 255, pow(2, (1 + i - size) * 0.1f) * 150);
+					pos = previousPoss.get(i);
+//							ellipse(pos.x, pos.y, pow(4, (1 + i - size) * 0.02f) * 8,
+//									pow(4, (1 + i - size) * 0.02f) * 8);
+			
+					ellipse(pos.x, pos.y,2,2);
+//							ellipse(pos.x, pos.y, pow(4, (1 + i - size) * 0.02f) * 4,
+//									pow(4, (1 + i - size) * 0.02f) * 4);
+					
+							
+				}
+				if (isDisplayName) {
+					pos = previousPoss.get(size - 1);
+					fill(255);
+					text(this.name, pos.x-25, pos.y-10);
+				}
 			}
 			
-			fill(255, 255);
-			pos = previousPoss.get(size - 1);
-			
-			if (isDisplayName) {
-				fill(255);
-				text(this.name, pos.x-30, pos.y-10);
-			}
 		}
 		
 		public void setIsdisplayName(boolean isDisplayName) {
 			this.isDisplayName = isDisplayName;
+		}
+		
+		public void setIsdisplay(boolean isDisplay) {
+			this.isDisplay = isDisplay;
 		}
 		
 		public Location getCurrentLoc() {
@@ -293,7 +335,7 @@ public class BeijingBus extends PApplet {
 
 	}
 
-	class Scrollbar {
+	class Scrollbar implements Control {
 		int swidth, sheight; // width and height of bar
 		float xpos, ypos; // x and y position of bar
 		float spos, newspos; // x position of slider
@@ -321,11 +363,13 @@ public class BeijingBus extends PApplet {
 			this.buses = buses;
 		}
 		
-		void setIsDisplay(boolean isDisplay) {
+		@Override
+		public void setIsDisplay(boolean isDisplay) {
 			this.isDisplay = isDisplay;
 		}
 
-		void update() {
+		@Override
+		public void update() {
 			if (overEvent()) {
 				over = true;
 			} else {
@@ -352,7 +396,8 @@ public class BeijingBus extends PApplet {
 			return min(max(val, minv), maxv);
 		}
 
-		boolean overEvent() {
+		@Override
+		public boolean overEvent() {
 			if (mouseX > xpos && mouseX < xpos + swidth && mouseY > ypos
 					&& mouseY < ypos + sheight) {
 				return true;
@@ -361,18 +406,21 @@ public class BeijingBus extends PApplet {
 			}
 		}
 
-		void display() {
+		@Override
+		public void display() {
 			if (isDisplay) {
-				stroke(50,80);
+				strokeWeight(6);
+				stroke(50);
 				line(xpos, ypos + sheight/2, xpos+swidth, ypos + sheight/2);
 				
-				stroke(0,0,255);
-				line(xpos+sheight/2, ypos + sheight/2, spos+sheight/4, ypos + sheight/2);
+				fill(255,255,255);
+				stroke(255,255,255);
+				line(xpos, ypos + sheight/2, spos + sheight/4, ypos + sheight/2);
 				
 				noStroke();
-				fill(0, 80);
-				rect(xpos, ypos, swidth, sheight);
-				fill(45,137,239);
+//				fill(0, 80);
+//				rect(xpos, ypos, swidth, sheight);
+//				fill(45,137,239);
 				
 				if (over || locked) {
 					fill(255,255,255);
@@ -381,7 +429,7 @@ public class BeijingBus extends PApplet {
 				}
 				ellipse(spos+sheight/2, ypos+sheight/2, sheight/2, sheight/2);
 				
-				fill(50);
+				fill(255,255,255);
 				text("Timeline", xpos-55, ypos+13);
 			}
 		}
@@ -393,7 +441,7 @@ public class BeijingBus extends PApplet {
 		}
 	}
 	
-	class HScrollbar {
+	class HScrollbar implements Control {
 		int swidth, sheight; // width and height of bar
 		float xpos, ypos; // x and y position of bar
 		float spos, newspos; // x position of slider
@@ -421,11 +469,13 @@ public class BeijingBus extends PApplet {
 			this.buses = buses;
 		}
 		
-		void setIsDisplay(boolean isDisplay) {
+		@Override
+		public void setIsDisplay(boolean isDisplay) {
 			this.isDisplay = isDisplay;
 		}
 
-		void update() {
+		@Override
+		public void update() {
 			if (overEvent()) {
 				over = true;
 			} else {
@@ -452,7 +502,8 @@ public class BeijingBus extends PApplet {
 			return min(max(val, minv), maxv);
 		}
 
-		boolean overEvent() {
+		@Override
+		public boolean overEvent() {
 			if (mouseX > xpos && mouseX < xpos + swidth && mouseY > ypos
 					&& mouseY < ypos + sheight) {
 				return true;
@@ -461,12 +512,13 @@ public class BeijingBus extends PApplet {
 			}
 		}
 
-		void display() {
+		@Override
+		public void display() {
 			if (isDisplay) {
 				stroke(50,80);
 				line(xpos + swidth/2, ypos, xpos + swidth/2, ypos + sheight - swidth/2);
 				
-				stroke(0,0,255);
+				stroke(255,255,255);
 				line(xpos + swidth/2, spos + swidth*3/4, xpos + swidth/2, ypos + sheight);
 				
 				noStroke();
@@ -494,7 +546,7 @@ public class BeijingBus extends PApplet {
 		}
 	}
 	
-	class Button {
+	class Button implements Control {
 		List<Bus> buses = null;
 		boolean isSelected = false;
 		float xpos, ypos;
@@ -507,10 +559,11 @@ public class BeijingBus extends PApplet {
 			this.xpos = xpos;
 			this.ypos = ypos;
 			this.width = width;
-			this.height = width;
+			this.height = height;
 		}
 		
-		boolean overEvent() {
+		@Override
+		public boolean overEvent() {
 			if (mouseX > xpos && mouseX < xpos + width && mouseY > ypos
 					&& mouseY < ypos + height) {
 				return true;
@@ -519,7 +572,8 @@ public class BeijingBus extends PApplet {
 			}
 		}
 		
-		void update() {
+		@Override
+		public void update() {
 			if (overEvent()) {
 				isOver = true;
 			} else {
@@ -539,24 +593,214 @@ public class BeijingBus extends PApplet {
 			}
 		}
 		
-		void display() {
+		@Override
+		public void display() {
 			if (isDisplay) {				
 				fill(0, 80);
-				rect(xpos, ypos, width, width);
-				fill(0,0,255, 80);
+//				rect(xpos, ypos, width, width);
+				fill(196,196,196, 80);
 				ellipse(xpos + width/2, ypos + width/2, width, width);
 				
-				fill(0,0,255, 80);
+				fill(255);
 				ellipse(xpos + width/2, ypos + width/2, width/2, width/2);
 				if (isSelected) {
-					fill(255);
+					fill(255,196,13);
 					ellipse(xpos + width/2, ypos + width/2, width/2, width/2);
 				}
+				fill(255);
+				textSize(10);
+				text("Bus Number", xpos-width, ypos+3*height/2);
 			}
 		}
-		void setIsDisplay(boolean isDisplay) {
+		
+		@Override
+		public void setIsDisplay(boolean isDisplay) {
 			this.isDisplay = isDisplay;
 		}
 		
+	}
+	
+	class ControlPanel implements Control {
+		List<Bus> buses = null;
+		boolean isSelected = false;
+		float xpos, ypos;
+		float width, height;
+		boolean isOver = false;
+		boolean isDisplay = false;
+		
+		ControlPanel(float xpos, float ypos, float width, float height, List<Bus> buses) {
+			this.buses = buses;
+			this.xpos = xpos;
+			this.ypos = ypos;
+			this.width = width;
+			this.height = height;
+		}
+		
+		@Override
+		public boolean overEvent() {
+			if (mouseX > xpos && mouseX < xpos + width && mouseY > ypos
+					&& mouseY < ypos + height) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public void update() {
+		}
+		
+		@Override
+		public void display() {
+			if (this.isDisplay) {				
+				fill(0,0,0, 0.65f * 255);
+				rect(xpos, ypos, width, height);
+			}
+		}
+		
+		@Override
+		public void setIsDisplay(boolean isDisplay) {
+			this.isDisplay = isDisplay;
+		}
+	}
+	
+	class CircleButton implements Control {
+		List<Bus> buses = null;
+		boolean isSelected = false;
+		float xpos, ypos;
+		float width, height;
+		boolean isOver = false;
+		boolean isDisplay = false;
+		String lineNum = "";
+		
+		CircleButton(float xpos, float ypos, float width, float height, List<Bus> buses, String lineNum) {
+			this.buses = buses;
+			this.xpos = xpos;
+			this.ypos = ypos;
+			this.width = width;
+			this.height = height;
+			this.lineNum = lineNum;
+			isSelected = true;
+		}
+		
+		@Override
+		public boolean overEvent() {
+			float dis = pow((mouseX - xpos), 2) + pow((mouseY-ypos), 2);
+			if (dis <= pow(this.width / 2, 2)) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public void update() {
+			if (overEvent()) {
+				isOver = true;
+			} else {
+				isOver = false;
+			}
+			if (mousePressed && isOver) {
+				isSelected = !isSelected;
+				if (isSelected) {
+					for (Bus bus : buses) {
+						if (bus.name.contains(lineNum)) {
+							bus.setIsdisplay(true);
+						}
+					}
+				} else {
+					for (Bus bus : buses) {
+						if (bus.name.contains(lineNum)) {
+							bus.setIsdisplay(false);
+						}
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void display() {
+			if (isDisplay) {
+				strokeWeight(1);
+				if (isSelected) {
+					stroke(255,196,13);
+					fill(255,196,13);
+					ellipse(xpos, ypos, width, height);
+				} else {
+					stroke(196,196,196);
+					fill(196,196,196);
+					ellipse(xpos, ypos, width, height);
+				}
+				fill(255);
+				textSize(10);
+				text(lineNum.substring(1), xpos-width/2, ypos+height);
+			}
+		}
+		
+		@Override
+		public void setIsDisplay(boolean isDisplay) {
+			this.isDisplay = isDisplay;
+		}
+		
+	}
+	
+	class Circle implements Control{
+		float xpos, ypos;
+		float width, height;
+		boolean isDisplay = false;
+		int type;
+		
+		Circle(float xpos, float ypos, float width, float height, int type) {
+			this.type = type;
+			this.xpos = xpos;
+			this.ypos = ypos;
+			this.width = width;
+			this.height = height;
+		}
+		
+		@Override
+		public boolean overEvent() {
+			if (mouseX > xpos && mouseX < xpos + width && mouseY > ypos
+					&& mouseY < ypos + height) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		@Override
+		public void update() {
+		}
+		
+		@Override
+		public void display() {
+			strokeWeight(1);
+			if(this.isDisplay) {
+				if (this.type == 0) {
+					stroke(196,196,196);
+					fill(196,196,196);
+					ellipse(xpos, ypos, width, height);
+				} else {
+					stroke(255,196,13);
+					fill(255,196,13);
+					ellipse(xpos, ypos, width, height);
+				}
+				fill(255);
+				textSize(10);
+				text("Hide", xpos-width/2, ypos+height);
+			} 
+		}
+
+		@Override
+		public void setIsDisplay(boolean isDisplay) {
+			this.isDisplay = isDisplay;
+		}
+	}
+	
+	interface Control {
+		boolean overEvent();
+		void update();
+		void display();
+		void setIsDisplay(boolean isDisplay);
 	}
 }
