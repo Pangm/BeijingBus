@@ -1,5 +1,3 @@
-/build/*.class
-/build/*.applet
-/build/*.log
+/build/
 /out/
 /BeijingBus.iml

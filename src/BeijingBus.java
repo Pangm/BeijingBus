@@ -23,7 +23,7 @@ public class BeijingBus extends PApplet {
 	 */
 	private static final long serialVersionUID = 1L;
 	UnfoldingMap map;
-	final String DATA_DIRECTORY = "data"; 
+	final String DATA_DIRECTORY = "../data/bus"; 
 	Location beijingLocation = new Location(39.9f, 116.3f);
 	List<Bus> buses = new ArrayList<Bus>();
 	List<String> lineNums = new ArrayList<String>();
@@ -66,6 +66,7 @@ public class BeijingBus extends PApplet {
 		try {
 			File file = new File(filePath);
 			if (file.isDirectory()) {
+				System.out.println(file.getAbsolutePath());
 				String[] filelist = file.list();
 				for (int i = 0; i < filelist.length; i++) {
 					File readfile = new File(filePath + "/" + filelist[i]);
@@ -96,7 +97,7 @@ public class BeijingBus extends PApplet {
 	public void setup() {
 		size(1000, 600, P2D);
 
-		String mbTilesString = sketchPath("bj_ed2114.mbtiles");
+		String mbTilesString = sketchPath("../data/map/bj_ed2114.mbtiles");
 
 		map = new UnfoldingMap(this, new MBTilesMapProvider(mbTilesString));
 
