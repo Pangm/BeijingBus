@@ -68,7 +68,7 @@ public class BeijingBus extends PApplet {
 			if (file.isDirectory()) {
 				String[] filelist = file.list();
 				for (int i = 0; i < filelist.length; i++) {
-					File readfile = new File(filePath + "\\" + filelist[i]);
+					File readfile = new File(filePath + "/" + filelist[i]);
 					if (!readfile.isDirectory()) {
 						String name = readfile.getName();
 						System.out.println("path=" + readfile.getPath());
@@ -84,7 +84,7 @@ public class BeijingBus extends PApplet {
 							lineNums.add(lineNum);
 						}
 					} else {
-						// readfile(filePath + "\\" + filelist[i]);
+						// readfile(filePath + "/" + filelist[i]);
 					}
 				}
 			}
@@ -248,26 +248,19 @@ public class BeijingBus extends PApplet {
 				int size = previousPoss.size();	
 				
 				ScreenPosition pos = previousPoss.get(size - 1);
-//						fill(255,196,13);
+				
 				noStroke();
 				fill(255, 255, 255,0.2f * 255);
 				ellipse(pos.x, pos.y, 10,10);
 				
 				fill(255, 255, 255);
-				ellipse(pos.x, pos.y,4,4);
-//						fill(255,196,13,0.5f * 255);
+				ellipse(pos.x, pos.y,5,5);
 				
 				for (int i = size - 1; i > -1; i--) {
-//							fill(45,137,239, pow(4, (1 + i - size) * 0.1f) * 255);
-//							fill(255,196,13, pow(2, (1 + i - size) * 0.1f) * 150);
-					fill(255, 255, 255, pow(2, (1 + i - size) * 0.1f) * 150);
+					fill(45,137,239, pow(2, (1 + i - size) * 0.1f) * 255);
+//					fill(45,137,239, pow(2, (1 + i - size) * 0.1f) * 150);
 					pos = previousPoss.get(i);
-//							ellipse(pos.x, pos.y, pow(4, (1 + i - size) * 0.02f) * 8,
-//									pow(4, (1 + i - size) * 0.02f) * 8);
-			
 					ellipse(pos.x, pos.y,2,2);
-//							ellipse(pos.x, pos.y, pow(4, (1 + i - size) * 0.02f) * 4,
-//									pow(4, (1 + i - size) * 0.02f) * 4);
 					
 							
 				}
@@ -423,9 +416,9 @@ public class BeijingBus extends PApplet {
 //				fill(45,137,239);
 				
 				if (over || locked) {
-					fill(255,255,255);
+					fill(255,196,13);
 				} else {
-					fill(255,255,255, 150);
+					fill(255,255,255);
 				}
 				ellipse(spos+sheight/2, ypos+sheight/2, sheight/2, sheight/2);
 				
@@ -723,12 +716,12 @@ public class BeijingBus extends PApplet {
 			if (isDisplay) {
 				strokeWeight(1);
 				if (isSelected) {
-					stroke(255,196,13);
+					noStroke();
 					fill(255,196,13);
 					ellipse(xpos, ypos, width, height);
 				} else {
-					stroke(196,196,196);
-					fill(196,196,196);
+					noStroke();
+					fill(196,196,196,50);
 					ellipse(xpos, ypos, width, height);
 				}
 				fill(255);
@@ -776,18 +769,20 @@ public class BeijingBus extends PApplet {
 		public void display() {
 			strokeWeight(1);
 			if(this.isDisplay) {
+				fill(255);
+				textSize(10);
 				if (this.type == 0) {
-					stroke(196,196,196);
-					fill(196,196,196);
+					text("Hidden", xpos-width/2, ypos+height);
+					noStroke();
+					fill(196,196,196,50);
 					ellipse(xpos, ypos, width, height);
 				} else {
-					stroke(255,196,13);
+					text("Display", xpos-width/2, ypos+height);
+					noStroke();
 					fill(255,196,13);
 					ellipse(xpos, ypos, width, height);
 				}
-				fill(255);
-				textSize(10);
-				text("Hide", xpos-width/2, ypos+height);
+				
 			} 
 		}
 
