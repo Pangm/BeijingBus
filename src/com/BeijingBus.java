@@ -2,20 +2,32 @@ package com;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import com.widgets.*;
 
 import processing.core.PApplet;
+import processing.core.PConstants;
+import processing.core.PImage;
+import processing.core.PShape;
+import processing.event.MouseEvent;
 import de.fhpotsdam.unfolding.UnfoldingMap;
 import de.fhpotsdam.unfolding.geo.Location;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
 import de.fhpotsdam.unfolding.utils.MapUtils;
 
 /**
- * Beijing Bus. Visualization of Bus position. .
+ * Beijing Bus. Visualization of Bus position.
  */
 public class BeijingBus extends PApplet {
 
@@ -24,7 +36,7 @@ public class BeijingBus extends PApplet {
 	 */
 	private static final long serialVersionUID = 1L;
 	UnfoldingMap map;
-	final String DATA_DIRECTORY = "../data/bus";
+	final String DATA_DIRECTORY = "./data/bus";
 	Location beijingLocation = new Location(39.9f, 116.3f);
 	List<Bus> buses = new ArrayList<Bus>();
 	List<String> lineNums = new ArrayList<String>();
@@ -33,12 +45,20 @@ public class BeijingBus extends PApplet {
 	Button button = null;
 	Panel panel = null;
 	int initZoomLevel = 11;
+	float progress = 0;
+	int loadCnt = 0;
+	PShape busLogo;
+	Image icon;
 
 	List<Control> controls = new ArrayList<Control>();
 
 	int displayFrameCnt = 80;
 
-	void loadData(List<Location> list, String filename) {
+	public static void main(String[] agrs) {
+		PApplet.main(new String[] { "com.BeijingBus" });
+	}
+
+	private void loadData(List<Location> list, String filename) {
 		BufferedReader reader = createReader(filename);
 
 		for (int i = 0; i < 1600; i += 5) {
@@ -79,8 +99,9 @@ public class BeijingBus extends PApplet {
 
 						pathLocs = new ArrayList<Location>();
 						loadData(pathLocs, readfile.getPath());
-						buses.add(new Bus(this, map, initZoomLevel, name.substring(0, name.indexOf('.')),
-								pathLocs, buses));
+						buses.add(new Bus(this, map, initZoomLevel, name
+								.substring(0, name.indexOf('.')), pathLocs,
+								buses));
 						String lineNum = name.substring(name.indexOf('-'),
 								name.indexOf('.'));
 						if (!lineNums.contains(lineNum)) {
@@ -97,15 +118,15 @@ public class BeijingBus extends PApplet {
 	}
 
 	public void setup() {
-		size(1000, 600, P2D);
+		size(1000, 600);
 
-		String mbTilesString = sketchPath("../data/map/bj_ed2114.mbtiles");
+		String mbTilesString = sketchPath("./data/map/bj_ed2114.mbtiles");
 
 		map = new UnfoldingMap(this, new MBTilesMapProvider(mbTilesString));
 
 		map.zoomToLevel(initZoomLevel);
 		map.panTo(beijingLocation);
-		map.setZoomRange(9, 14); // prevent zooming too far out
+		map.setZoomRange(10, 14); // prevent zooming too far out
 		map.setPanningRestriction(beijingLocation, 50);
 		MapUtils.createDefaultEventDispatcher(this, map);
 
@@ -145,41 +166,103 @@ public class BeijingBus extends PApplet {
 					lineNums.get(i));
 			controls.add(cButton);
 		}
-
+		this.registerMethod("mouseEvent", this);
 		frameRate(60);
+		loadCnt = (int) (frameRate * 6);
+
+		busLogo = loadShape("./data/bus_logo.svg");
+		Toolkit tk = Toolkit.getDefaultToolkit();
+		icon = tk.createImage("./data/bus-red-icon.png");
 	}
 
 	public void draw() {
 		background(0);
+		
+		this.frame.setTitle("Beijing Bus");
+		this.frame.setIconImage(icon);
 		map.draw();
 
-		for (Control control : controls) {
-			control.update();
-			control.display();
-		}
-
-		for (Bus bus : buses) {
-			bus.display();
-		}
-
-		if (mousePressed) {
-			for (Bus bus : buses) {
-				bus.clearPreviosPos();
-			}
-
-			for (Control control : controls) {
-				control.setIsDisplay(true);
-			}
-			displayFrameCnt = 100;
-		}
-
-		if (displayFrameCnt > 0) {
-			displayFrameCnt--;
+		if (loadCnt > 0) {
+			fill(255);
+			rect(0, 0, width, height);
+			shape(busLogo, width / 2 - width / 16f, height / 2 - 1.225f * width
+					/ 16, width / 8f, 1.225f * width / 8);
+			loadCnt--;
 		} else {
 			for (Control control : controls) {
-				control.setIsDisplay(false);
+				control.display();
+			}
+
+			for (Bus bus : buses) {
+				bus.display();
+			}
+
+			if (mousePressed) {
+				for (Bus bus : buses) {
+					bus.clearPreviosPos();
+				}
+
+				for (Control control : controls) {
+					control.setIsDisplay(true);
+				}
+				button.setIsDisplay(true);
+				displayFrameCnt = 100;
+			}
+
+			if (displayFrameCnt > 0) {
+				displayFrameCnt--;
+			} else {
+				for (Control control : controls) {
+					control.setIsDisplay(false);
+				}
 			}
 		}
 	}
 
+	// --------------------------------------------------------------
+	// Shamelessly copied code from Processing PApplet. No other way to hook
+	// into
+	// register Processing mouse event and still have the same functionality
+	// with pmouseX, etc.
+	// --------------------------------------------------------------
+
+	public void mouseEvent(MouseEvent event) {
+		int action = event.getAction();
+
+		// mouseX = event.getX();
+		// mouseY = event.getY();
+
+		// if ((action == MouseEvent.DRAG) || (action == MouseEvent.MOVE)) {
+		// pmouseX = emouseX;
+		// pmouseY = emouseY;
+		// mouseX = event.getX();
+		// mouseY = event.getY();
+		// }
+
+		if (event.getButton() == PConstants.LEFT) {
+			switch (action) {
+			case MouseEvent.CLICK:
+				mouseClicked();
+
+				for (Control control : controls) {
+					control.update();
+				}
+
+				break;
+			case MouseEvent.DRAG:
+				mouseDragged();
+				break;
+			case MouseEvent.MOVE:
+				mouseMoved();
+				break;
+			default:
+				break;
+			}
+		}
+
+		if ((action == MouseEvent.DRAG) || (action == MouseEvent.MOVE)) {
+			emouseX = mouseX;
+			emouseY = mouseY;
+		}
+	}
 }

@@ -46,7 +46,7 @@ public class CircleButton implements Control {
 		} else {
 			isOver = false;
 		}
-		if (context.mousePressed && isOver) {
+		if (isDisplay && isOver) {
 			isSelected = !isSelected;
 			if (isSelected) {
 				for (Bus bus : buses) {

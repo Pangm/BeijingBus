@@ -28,7 +28,7 @@ public class Scrollbar implements Control {
 		ratio = (float) sw / (float) widthtoheight;
 		xpos = xp;
 		ypos = yp - sheight / 2;
-		spos = xpos + swidth / 2 - sheight / 2;
+		spos = xpos + swidth / 4 - sheight / 2;
 		newspos = spos;
 		sposMin = xpos;
 		sposMax = xpos + swidth - sheight;
@@ -49,21 +49,21 @@ public class Scrollbar implements Control {
 		} else {
 			over = false;
 		}
-		if (context.mousePressed && over) {
-			locked = true;
-		}
-		if (!context.mousePressed) {
-			locked = false;
-		}
-		if (locked) {
+//		if (context.mousePressed && over) {
+//			locked = true;
+//		}
+//		if (!context.mousePressed) {
+//			locked = false;
+//		}
+		if (over) {
 			newspos = constrain(context.mouseX - sheight / 2, sposMin, sposMax);
 			for (Bus bus : buses) {
 				bus.setProgress((spos - sposMin) / swidth);
 			}
 		}
-		if (PApplet.abs(newspos - spos) > 1) {
-			spos = spos + (newspos - spos) / loose;
-		}
+//		if (PApplet.abs(newspos - spos) > 1) {
+//			spos = spos + (newspos - spos) / loose;
+//		}
 	}
 
 	float constrain(float val, float minv, float maxv) {
@@ -83,6 +83,9 @@ public class Scrollbar implements Control {
 	@Override
 	public void display() {
 		if (isDisplay) {
+			if (PApplet.abs(newspos - spos) > 1) {
+				spos = spos + (newspos - spos) / loose;
+			}
 			context.strokeWeight(6);
 			context.stroke(50);
 			context.line(xpos, ypos + sheight / 2, xpos + swidth, ypos
@@ -108,6 +111,9 @@ public class Scrollbar implements Control {
 		}
 	}
 
+	float getProgress() {
+		return (spos - sposMin) / swidth;
+	}
 	float getPos() {
 		// Convert spos to be values between
 		// 0 and the total width of the scrollbar
